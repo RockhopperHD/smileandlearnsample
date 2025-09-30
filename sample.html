@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego de Clasificación Gramatical: La Playa</title>
+<style>
+body {
+font-family: 'Arial', sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+background-color: #e0f7fa;
+margin: 0;
+padding: 20px;
+}
+.game-container {
+background-color: #ffffff;
+border-radius: 10px;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+padding: 30px;
+max-width: 900px;
+width: 100%;
+text-align: center;
+position: relative;
+}
+h1 {
+color: #00796b;
+margin-bottom: 25px;
+}
+p {
+margin-bottom: 20px;
+font-size: 1.1em;
+color: #333;
+}
+#sentence-display {
+min-height: 80px;
+margin-bottom: 25px;
+border: 2px solid #b2dfdb;
+padding: 15px;
+border-radius: 8px;
+background-color: #f0fdfc;
+font-size: 1.3em;
+line-height: 1.6;
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+align-items: center;
+gap: 5px;
+}
+.word-draggable {
+display: inline-block;
+padding: 8px 12px;
+margin: 2px 0;
+border-radius: 5px;
+cursor: grab;
+background-color: #e3f2fd;
+border: 1px solid #90caf9;
+color: #1565c0;
+transition: background-color 0.2s, transform 0.1s;
+touch-action: manipulation;
+min-width: 50px;
+user-select: none;
+}
+.word-draggable:hover {
+background-color: #bbdefb;
+transform: translateY(-1px);
+}
+.word-draggable.is-dragging {
+opacity: 0.5;
+cursor: grabbing;
+}
+.word-draggable.click-selected {
+background-color: #c5eff7;
+border-color: #80deea;
+box-shadow: 0 0 8px rgba(128, 222, 234, 0.6);
+transform: scale(1.05);
+}
+.punctuation, .other-word {
+display: inline-block;
+margin: 0 2px;
+padding: 8px 0;
+color: #555;
+font-weight: normal;
+cursor: default;
+user-select: none;
+}
+.drop-zones-container {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 15px;
+margin-top: 20px;
+}
+.drop-zone {
+flex: 1;
+min-width: 180px;
+border: 2px solid #a7d9e2;
+padding: 15px;
+min-height: 150px;
+background-color: #e0f2f7;
+border-radius: 8px;
+text-align: center;
+transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+cursor: pointer;
+}
+.drop-zone h2 {
+color: #546e7a;
+margin-top: 0;
+margin-bottom: 10px;
+font-size: 1.1em;
+}
+.drop-zone.drag-over {
+background-color: #c9e6ed;
+border-color: #00bcd4;
+border-width: 3px;
+box-shadow: 0 0 15px rgba(0, 188, 212, 0.6);
+}
+.drop-zone .word-draggable {
+cursor: default;
+margin: 5px;
+background-color: #c8e6c9;
+color: #2e7d32;
+border-color: #a5d6a7;
+}
+.buttons-container {
+margin-top: 30px;
+}
+button {
+background-color: #26a69a;
+color: white;
+border: none;
+padding: 12px 25px;
+font-size: 1.1em;
+border-radius: 7px;
+cursor: pointer;
+margin: 0 10px;
+transition: background-color 0.2s, transform 0.1s;
+box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+button:hover {
+background-color: #00897b;
+transform: translateY(-2px);
+}
+button:disabled {
+background-color: #b2dfdb;
+cursor: not-allowed;
+box-shadow: none;
+}
+#feedback {
+margin-top: 20px;
+min-height: 30px;
+font-size: 1.2em;
+font-weight: bold;
+color: #333;
+}
+.correct-category {
+background-color: #66bb6a !important;
+color: white !important;
+border-color: #388e3c !important;
+}
+.wrongly-placed {
+background-color: #ffeb3b !important;
+color: #e65100 !important;
+border-color: #fbc02d !important;
+}
+.missed-category {
+background-color: #ffb74d !important;
+color: #e65100 !important;
+border-color: #f57c00 !important;
+}
+.final-message {
+margin-top: 30px;
+font-size: 1.4em;
+color: #00796b;
+}
+#language-toggle, #help-button {
+position: absolute;
+top: 15px;
+background-color: #00796b;
+color: white;
+border: none;
+padding: 8px 12px;
+font-size: 0.9em;
+border-radius: 5px;
+cursor: pointer;
+z-index: 10;
+}
+#language-toggle:hover, #help-button:hover {
+background-color: #004d40;
+}
+#language-toggle {
+right: 15px;
+}
+#help-button {
+left: 15px;
+}
+
+    /* Tutorial Modal */
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 100; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.6); 
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 25px;
+        border-radius: 10px;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        position: relative;
+        text-align: left;
+        color: #333;
+        line-height: 1.5;
+        font-size: 1.1em;
+    }
+    .modal-content h2 {
+        color: #00796b;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+        text-align: center;
+    }
+    .modal-content ul {
+        list-style-type: disc;
+        margin-left: 25px;
+        margin-bottom: 15px;
+    }
+    .modal-content li {
+        margin-bottom: 8px;
+    }
+    .modal-content strong {
+        color: #00796b;
+    }
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+    }
+    .close-button:hover,
+    .close-button:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* Results Screen Specific Styles */
+    #results-screen {
+        text-align: left;
+        margin-top: 30px;
+    }
+    #results-screen h2 {
+        color: #00796b;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .result-sentence {
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    .result-sentence p {
+        margin: 0;
+        font-size: 1.2em;
+        line-height: 1.8;
+    }
+    .result-word-wrapper {
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .result-word {
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+        }
+        .game-container {
+            padding: 20px 15px;
+        }
+        h1 {
+            font-size: 1.5em;
+        }
+        p {
+            font-size: 0.95em;
+        }
+        #sentence-display {
+            font-size: 1em;
+            gap: 3px;
+            padding: 10px;
+            min-height: 60px;
+        }
+        .word-draggable {
+            padding: 6px 10px;
+            min-width: 40px;
+            font-size: 0.9em;
+        }
+        .drop-zones-container {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .drop-zone {
+            min-width: unset;
+            width: 95%; 
+            margin: 0 auto;
+            padding: 10px;
+            min-height: 100px;
+        }
+        .drop-zone h2 {
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+        button {
+            padding: 10px 18px;
+            font-size: 0.95em;
+            margin: 5px;
+        }
+        #language-toggle, #help-button {
+            top: 10px;
+            padding: 6px 10px;
+            font-size: 0.8em;
+        }
+        #language-toggle {
+            right: 10px;
+        }
+        #help-button {
+            left: 10px;
+        }
+        .modal-content {
+            padding: 15px;
+            font-size: 1em;
+            width: 95%;
+        }
+        .modal-content h2 {
+            font-size: 1.3em;
+        }
+        .modal-content ul {
+            margin-left: 20px;
+            font-size: 0.9em;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="game-container">
+<button id="help-button" data-lang-key="helpButton">Ayuda</button>
+<button id="language-toggle" data-lang="en">English</button>
+<h1 id="main-title">Juego de Clasificación Gramatical: La Playa</h1>
+<p id="instructions">Arrastra cada palabra a su categoría gramatical correcta o haz clic en una palabra y luego en la categoría.</p>
+
+    <div id="sentence-display" class="drag-source-container"></div>
+    
+    <div class="drop-zones-container">
+        <div class="drop-zone" id="zone-Verbo">
+            <h2 id="zone-Verbo-title">Verbos</h2>
+        </div>
+        <div class="drop-zone" id="zone-Sustantivo">
+            <h2 id="zone-Sustantivo-title">Sustantivos</h2>
+        </div>
+        <div class="drop-zone" id="zone-Adjetivo">
+            <h2 id="zone-Adjetivo-title">Adjetivos</h2>
+        </div>
+        <div class="drop-zone" id="zone-ArticuloDefinido">
+            <h2 id="zone-ArticuloDefinido-title">Artículos Definidos</h2>
+        </div>
+    </div>
+
+    <div class="buttons-container">
+        <button id="confirm-btn" disabled>Confirmar</button>
+        <button id="next-btn" style="display: none;">Siguiente</button>
+    </div>
+    <div id="feedback"></div>
+    
+    <div id="results-screen" style="display: none;">
+        <h2 id="results-title">Resultados Finales</h2>
+        <div id="results-content">
+            
+        </div>
+    </div>
+
+</div>
+
+<!-- Tutorial Modal -->
+<div id="tutorialModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 id="tutorial-title">Cómo Jugar</h2>
+        <p id="tutorial-intro">Bienvenido al juego de clasificación de palabras. Tu objetivo es clasificar las palabras de cada oración en su categoría gramatical correcta. Hay dos formas de hacerlo:</p>
+        <ul>
+            <li id="tutorial-drag-drop"><strong>Arrastrar y Soltar:</strong> Haz clic en una palabra y, sin soltar, arrástrala hasta la caja de su categoría correcta (Verbos, Sustantivos, Adjetivos, Artículos Definidos) y suéltala. Las zonas se iluminarán cuando puedas soltar una palabra.</li>
+            <li id="tutorial-click-mode"><strong>Modo Clic:</strong> Si no puedes arrastrar (por ejemplo, en un dispositivo móvil), haz clic en la palabra que deseas mover. Se pondrá azul claro. Luego, haz clic en la caja de la categoría correcta.</li>
+            <li id="tutorial-confirm">Cuando hayas clasificado todas las palabras que consideres de las categorías objetivo, haz clic en el botón "Confirmar" para ver tus resultados. Las palabras que ya estén correctas se quedarán, y las que no, volverán a la oración para que lo intentes de nuevo, marcadas en amarillo (mal colocadas) o naranja (olvidadas).</li>
+            <li id="tutorial-feedback">Solo podrás avanzar a la siguiente oración cuando todas las palabras objetivo de la frase actual estén correctas (en verde).</li>
+            <li id="tutorial-next">Usa el botón "Siguiente" para pasar a la siguiente oración.</li>
+            <li id="tutorial-language">Puedes cambiar el idioma de la interfaz (textos de los botones, títulos) haciendo clic en el botón de idioma en la esquina superior derecha.</li>
+        </ul>
+        <p id="tutorial-good-luck">¡Mucha suerte!</p>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        es: {
+            title: "Juego de Clasificación Gramatical: La Playa",
+            instructions: "Arrastra cada palabra a su categoría gramatical correcta o haz clic en una palabra y luego en la categoría.",
+            confirmBtn: "Confirmar",
+            nextBtn: "Siguiente",
+            zoneVerbo: "Verbos",
+            zoneSustantivo: "Sustantivos",
+            zoneAdjetivo: "Adjetivos",
+            zoneArticuloDefinido: "Artículos Definidos",
+            resultsTitle: "Resultados Finales",
+            feedbackCorrect: (correct, total) => `¡Excelente! Has clasificado <strong>${correct}</strong> palabras correctamente de <strong>${total}</strong> en esta oración.`, 
+            feedbackMixed: (correct, total) => `¡Buen intento! Has clasificado <strong>${correct}</strong> palabras correctamente de <strong>${total}</strong>. Vuelve a intentarlo con las palabras resaltadas.`, 
+            endGame: `¡Juego terminado! Revisemos tu trabajo.`, 
+            langToggle: "English",
+            helpButton: "Ayuda",
+            tutorialTitle: "Cómo Jugar",
+            tutorialIntro: "Bienvenido al juego de clasificación de palabras. Tu objetivo es clasificar las palabras de cada oración en su categoría gramatical correcta. Hay dos formas de hacerlo:",
+            tutorialDragDrop: "<strong>Arrastrar y Soltar:</strong> Haz clic en una palabra y, sin soltar, arrástrala hasta la caja de su categoría correcta (Verbos, Sustantivos, Adjetivos, Artículos Definidos) y suéltala. Las zonas se iluminarán cuando puedas soltar una palabra.",
+            tutorialClickMode: "<strong>Modo Clic:</strong> Si no puedes arrastrar (por ejemplo, en un dispositivo móvil), haz clic en la palabra que deseas mover. Se pondrá azul claro. Luego, haz clic en la caja de la categoría correcta.",
+            tutorialConfirm: "Cuando hayas clasificado todas las palabras que consideres de las categorías objetivo, haz clic en el botón \"Confirmar\" para ver tus resultados. Las palabras que ya estén correctas se quedarán, y las que no, volverán a la oración para que lo intentes de nuevo, marcadas en amarillo (mal colocadas) o naranja (olvidadas).",
+            tutorialFeedback: "Solo podrás avanzar a la siguiente oración cuando todas las palabras objetivo de la frase actual estén correctas (en verde).",
+            tutorialNext: "Usa el botón \"Siguiente\" para pasar a la siguiente oración.",
+            tutorialLanguage: "Puedes cambiar el idioma de la interfaz (textos de los botones, títulos) haciendo clic en el botón de idioma en la esquina superior derecha.",
+            tutorialGoodLuck: "¡Mucha suerte!"
+        },
+        en: {
+            title: "Grammar Classification Game: The Beach",
+            instructions: "Drag each word to its correct grammatical category or click a word then click the category.",
+            confirmBtn: "Confirm",
+            nextBtn: "Next",
+            zoneVerbo: "Verbs",
+            zoneSustantivo: "Nouns",
+            zoneAdjetivo: "Adjectives",
+            zoneArticuloDefinido: "Definite Articles",
+            resultsTitle: "Final Results",
+            feedbackCorrect: (correct, total) => `Excellent! You classified <strong>${correct}</strong> words correctly out of <strong>${total}</strong> in this sentence.`, 
+            feedbackMixed: (correct, total) => `Good try! You classified <strong>${correct}</strong> words correctly out of <strong>${total}</strong>. Try again with the highlighted words.`, 
+            endGame: `Game over! Let's review your work.`, 
+            langToggle: "Español",
+            helpButton: "How to Play",
+            tutorialTitle: "How to Play",
+            tutorialIntro: "Welcome to the word classification game. Your goal is to sort the words from each sentence into their correct grammatical category. There are two ways to play:",
+            tutorialDragDrop: "<strong>Drag and Drop:</strong> Click and hold a word, then drag it to the correct category box (Verbs, Nouns, Adjectives, Definite Articles) and release. The drop zones will light up when you can drop a word.",
+            tutorialClickMode: "<strong>Click Mode:</strong> If you cannot drag (e.g., on a mobile device), click the word you want to move. It will turn light blue. Then, click the correct category box.",
+            tutorialConfirm: "When you have classified all target words, click the \"Confirm\" button to see your results. Correct words will stay, and incorrect ones will return to the sentence for you to try again, marked yellow (misplaced) or orange (missed).",
+            tutorialFeedback: "You can only advance to the next sentence when all target words in the current sentence are correct (green).",
+            tutorialNext: "Use the \"Next\" button to move to the next sentence.",
+            tutorialLanguage: "You can change the interface language (button texts, titles) by clicking the language button in the top right corner.",
+            tutorialGoodLuck: "Good luck!"
+        }
+    };
+
+    let currentLanguage = 'es';
+
+    const storyData = [
+        {
+            sentence: "El sol brillaba con mucha fuerza.",
+            wordParts: [
+                { text: "El", category: "ArticuloDefinido", id: "word-0-0", hadIssue: false },
+                { text: "sol", category: "Sustantivo", id: "word-0-1", hadIssue: false },
+                { text: "brillaba", category: "Verbo", id: "word-0-2", hadIssue: false },
+                { text: "con", category: "Otro", id: "word-0-3", hadIssue: false },
+                { text: "mucha", category: "Adjetivo", id: "word-0-4", hadIssue: false },
+                { text: "fuerza", category: "Sustantivo", id: "word-0-5", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-0-6", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "La arena de la playa estaba muy caliente.",
+            wordParts: [
+                { text: "La", category: "ArticuloDefinido", id: "word-1-0", hadIssue: false },
+                { text: "arena", category: "Sustantivo", id: "word-1-1", hadIssue: false },
+                { text: "de", category: "Otro", id: "word-1-2", hadIssue: false },
+                { text: "la", category: "ArticuloDefinido", id: "word-1-3", hadIssue: false },
+                { text: "playa", category: "Sustantivo", id: "word-1-4", hadIssue: false },
+                { text: "estaba", category: "Verbo", id: "word-1-5", hadIssue: false },
+                { text: "muy", category: "Otro", id: "word-1-6", hadIssue: false }, 
+                { text: "caliente", category: "Adjetivo", id: "word-1-7", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-1-8", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "Un pequeño cangrejo caminaba despacio.",
+            wordParts: [
+                { text: "Un", category: "Otro", id: "word-2-0", hadIssue: false }, 
+                { text: "pequeño", category: "Adjetivo", id: "word-2-1", hadIssue: false },
+                { text: "cangrejo", category: "Sustantivo", id: "word-2-2", hadIssue: false },
+                { text: "caminaba", category: "Verbo", id: "word-2-3", hadIssue: false },
+                { text: "despacio", category: "Otro", id: "word-2-4", hadIssue: false }, 
+                { text: ".", category: "Puntuacion", id: "word-2-5", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "Las grandes olas hacían un sonido de 'shhh'.",
+            wordParts: [
+                { text: "Las", category: "ArticuloDefinido", id: "word-3-0", hadIssue: false },
+                { text: "grandes", category: "Adjetivo", id: "word-3-1", hadIssue: false },
+                { text: "olas", category: "Sustantivo", id: "word-3-2", hadIssue: false },
+                { text: "hacían", category: "Verbo", id: "word-3-3", hadIssue: false },
+                { text: "un", category: "Otro", id: "word-3-4", hadIssue: false }, 
+                { text: "sonido", category: "Sustantivo", id: "word-3-5", hadIssue: false },
+                { text: "de", category: "Otro", id: "word-3-6", hadIssue: false },
+                { text: "'shhh'", category: "Otro", id: "word-3-7", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-3-8", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "Yo jugaba con mi pala y un cubo rojo.",
+            wordParts: [
+                { text: "Yo", category: "Otro", id: "word-4-0", hadIssue: false }, 
+                { text: "jugaba", category: "Verbo", id: "word-4-1", hadIssue: false },
+                { text: "con", category: "Otro", id: "word-4-2", hadIssue: false },
+                { text: "mi", category: "Otro", id: "word-4-3", hadIssue: false }, 
+                { text: "pala", category: "Sustantivo", id: "word-4-4", hadIssue: false },
+                { text: "y", category: "Otro", id: "word-4-5", hadIssue: false }, 
+                { text: "un", category: "Otro", id: "word-4-6", hadIssue: false }, 
+                { text: "cubo", category: "Sustantivo", id: "word-4-7", hadIssue: false },
+                { text: "rojo", category: "Adjetivo", id: "word-4-8", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-4-9", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "Construí un hermoso castillo de arena.",
+            wordParts: [
+                { text: "Construí", category: "Verbo", id: "word-5-0", hadIssue: false },
+                { text: "un", category: "Otro", id: "word-5-1", hadIssue: false },
+                { text: "hermoso", category: "Adjetivo", id: "word-5-2", hadIssue: false },
+                { text: "castillo", category: "Sustantivo", id: "word-5-3", hadIssue: false },
+                { text: "de", category: "Otro", id: "word-5-4", hadIssue: false },
+                { text: "arena", category: "Sustantivo", id: "word-5-5", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-5-6", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "Encontré una bonita concha marina.",
+            wordParts: [
+                { text: "Encontré", category: "Verbo", id: "word-6-0", hadIssue: false },
+                { text: "una", category: "Otro", id: "word-6-1", hadIssue: false }, 
+                { text: "bonita", category: "Adjetivo", id: "word-6-2", hadIssue: false },
+                { text: "concha", category: "Sustantivo", id: "word-6-3", hadIssue: false },
+                { text: "marina", category: "Adjetivo", id: "word-6-4", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-6-5", hadIssue: false }
+            ]
+        },
+        {
+            sentence: "El mar era de un color azul profundo.",
+            wordParts: [
+                { text: "El", category: "ArticuloDefinido", id: "word-7-0", hadIssue: false },
+                { text: "mar", category: "Sustantivo", id: "word-7-1", hadIssue: false },
+                { text: "era", category: "Verbo", id: "word-7-2", hadIssue: false },
+                { text: "de", category: "Otro", id: "word-7-3", hadIssue: false },
+                { text: "un", category: "Otro", id: "word-7-4", hadIssue: false },
+                { text: "color", category: "Sustantivo", id: "word-7-5", hadIssue: false },
+                { text: "azul", category: "Adjetivo", id: "word-7-6", hadIssue: false },
+                { text: "profundo", category: "Adjetivo", id: "word-7-7", hadIssue: false },
+                { text: ".", category: "Puntuacion", id: "word-7-8", hadIssue: false }
+            ]
+        }
+    ];
+
+    const targetCategories = ["Verbo", "Sustantivo", "Adjetivo", "ArticuloDefinido"];
+
+    let currentSentenceIndex = 0;
+    let selectedWordForClick = null; 
+
+    const sentenceDisplay = document.getElementById('sentence-display');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const feedbackDiv = document.getElementById('feedback');
+    const languageToggleBtn = document.getElementById('language-toggle');
+    const helpButton = document.getElementById('help-button');
+    const tutorialModal = document.getElementById('tutorialModal');
+    const closeModalBtn = document.querySelector('.close-button');
+    const resultsScreen = document.getElementById('results-screen');
+    const resultsContent = document.getElementById('results-content');
+
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        document.getElementById('main-title').textContent = translations[lang].title;
+        document.getElementById('instructions').textContent = translations[lang].instructions;
+        confirmBtn.textContent = translations[lang].confirmBtn;
+        nextBtn.textContent = translations[lang].nextBtn;
+        document.getElementById('zone-Verbo-title').textContent = translations[lang].zoneVerbo;
+        document.getElementById('zone-Sustantivo-title').textContent = translations[lang].zoneSustantivo;
+        document.getElementById('zone-Adjetivo-title').textContent = translations[lang].zoneAdjetivo;
+        document.getElementById('zone-ArticuloDefinido-title').textContent = translations[lang].zoneArticuloDefinido;
+        languageToggleBtn.textContent = translations[lang].langToggle;
+        languageToggleBtn.dataset.lang = (lang === 'es' ? 'en' : 'es');
+        helpButton.textContent = translations[lang].helpButton;
+        document.getElementById('results-title').textContent = translations[lang].resultsTitle;
+
+        // Tutorial text updates
+        document.getElementById('tutorial-title').textContent = translations[lang].tutorialTitle;
+        document.getElementById('tutorial-intro').innerHTML = translations[lang].tutorialIntro;
+        document.getElementById('tutorial-drag-drop').innerHTML = translations[lang].tutorialDragDrop;
+        document.getElementById('tutorial-click-mode').innerHTML = translations[lang].tutorialClickMode;
+        document.getElementById('tutorial-confirm').innerHTML = translations[lang].tutorialConfirm;
+        document.getElementById('tutorial-feedback').innerHTML = translations[lang].tutorialFeedback;
+        document.getElementById('tutorial-next').innerHTML = translations[lang].tutorialNext;
+        document.getElementById('tutorial-language').innerHTML = translations[lang].tutorialLanguage;
+        document.getElementById('tutorial-good-luck').innerHTML = translations[lang].tutorialGoodLuck;
+
+        if(feedbackDiv.textContent) {
+             feedbackDiv.textContent = '';
+        }
+        
+        if (currentSentenceIndex >= storyData.length) {
+            renderResultsScreen(); 
+        }
+    }
+
+    function displaySentence() {
+        if (currentSentenceIndex >= storyData.length) {
+            endGame();
+            return;
+        }
+
+        sentenceDisplay.innerHTML = '';
+        feedbackDiv.innerHTML = '';
+        confirmBtn.disabled = true;
+        nextBtn.style.display = 'none';
+        selectedWordForClick = null; 
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            Array.from(zone.children).forEach(child => {
+                if (child.tagName !== 'H2') {
+                    zone.removeChild(child);
+                }
+            });
+        });
+
+        const currentSentenceData = storyData[currentSentenceIndex];
+        let targetWordsInSentence = 0;
+
+        currentSentenceData.wordParts.forEach((part, index) => {
+            const wordWrapper = document.createElement('span');
+            wordWrapper.classList.add('word-wrapper');
+            
+            if (targetCategories.includes(part.category)) {
+                const wordSpan = document.createElement('span');
+                wordSpan.textContent = part.text;
+                wordSpan.classList.add('word-draggable');
+                wordSpan.setAttribute('draggable', 'true');
+                wordSpan.setAttribute('id', `word-${currentSentenceIndex}-${index}`);
+                wordSpan.dataset.category = part.category;
+                wordSpan.addEventListener('click', handleWordClick); 
+                wordWrapper.appendChild(wordSpan);
+                targetWordsInSentence++;
+            } else if (part.category === "Puntuacion") {
+                const punctSpan = document.createElement('span');
+                punctSpan.textContent = part.text;
+                punctSpan.classList.add('punctuation');
+                wordWrapper.appendChild(punctSpan);
+            } else { 
+                const otherSpan = document.createElement('span');
+                otherSpan.textContent = part.text;
+                otherSpan.classList.add('other-word');
+                wordWrapper.appendChild(otherSpan);
+            }
+            sentenceDisplay.appendChild(wordWrapper);
+        });
+        
+        checkConfirmButtonState();
+    }
+
+    // --- Drag & Drop Handlers ---
+    function handleDragStart(event) {
+        draggedWordId = event.target.id;
+        event.dataTransfer.setData('text/plain', draggedWordId);
+        event.target.classList.add('is-dragging');
+        
+        if (selectedWordForClick) {
+            selectedWordForClick.classList.remove('click-selected');
+            selectedWordForClick = null;
+        }
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault(); 
+        const target = event.target.closest('.drop-zone');
+        document.querySelectorAll('.drop-zone').forEach(zone => zone.classList.remove('drag-over'));
+        if (target) {
+            target.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(event) {
+        const target = event.target.closest('.drop-zone');
+        if (target) {
+            target.classList.remove('drag-over');
+        }
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        const targetDropZone = event.target.closest('.drop-zone');
+        
+        document.querySelectorAll('.drop-zone').forEach(zone => zone.classList.remove('drag-over'));
+
+        if (targetDropZone) {
+            const id = event.dataTransfer.getData('text/plain');
+            const draggableElement = document.getElementById(id);
+            
+            if (draggableElement) {
+                // Ensure the word is removed from its current parent before appending
+                if (draggableElement.parentNode.classList.contains('word-wrapper') && draggableElement.parentNode.parentNode.id === 'sentence-display') {
+                    draggableElement.parentNode.replaceWith(draggableElement); 
+                } else if (draggableElement.parentNode.classList.contains('drop-zone')) {
+                    draggableElement.parentNode.removeChild(draggableElement);
+                }
+                targetDropZone.appendChild(draggableElement);
+            }
+        }
+        document.querySelector('.is-dragging')?.classList.remove('is-dragging');
+        checkConfirmButtonState();
+    }
+
+    // --- Click-to-Sort Handlers ---
+    function handleWordClick(event) {
+        const clickedWord = event.target;
+        
+        if (clickedWord.closest('.drop-zone')) {
+            // If word is already in a drop zone, only deselect it if it was already selected
+            if (selectedWordForClick === clickedWord) {
+                clickedWord.classList.remove('click-selected');
+                selectedWordForClick = null;
+            }
+            return; 
+        }
+
+        if (selectedWordForClick === clickedWord) {
+            clickedWord.classList.remove('click-selected');
+            selectedWordForClick = null;
+        } else {
+            if (selectedWordForClick) {
+                selectedWordForClick.classList.remove('click-selected');
+            }
+            selectedWordForClick = clickedWord;
+            selectedWordForClick.classList.add('click-selected');
+        }
+        checkConfirmButtonState(); 
+    }
+
+    function handleDropZoneClick(event) {
+        if (selectedWordForClick) {
+            const targetDropZone = event.currentTarget; 
+            
+            selectedWordForClick.classList.remove('click-selected');
+
+            if (selectedWordForClick.parentNode.classList.contains('word-wrapper') && selectedWordForClick.parentNode.parentNode.id === 'sentence-display') {
+                selectedWordForClick.parentNode.replaceWith(selectedWordForClick); 
+            } else if (selectedWordForClick.parentNode.classList.contains('drop-zone')) {
+                selectedWordForClick.parentNode.removeChild(selectedWordForClick);
+            }
+            targetDropZone.appendChild(selectedWordForClick); 
+            selectedWordForClick = null; 
+
+            checkConfirmButtonState();
+        }
+    }
+
+    // --- General Game Logic ---
+    function checkConfirmButtonState() {
+        let movedWordsCount = 0;
+        document.querySelectorAll('.drop-zone .word-draggable').forEach(() => { movedWordsCount++; });
+
+        const currentSentenceData = storyData[currentSentenceIndex];
+        let totalTargetWordsInSentence = 0;
+        currentSentenceData.wordParts.forEach(part => {
+            if (targetCategories.includes(part.category)) {
+                totalTargetWordsInSentence++;
+            }
+        });
+        
+        const wordsInSentenceDisplay = document.querySelectorAll('#sentence-display .word-draggable').length;
+
+        if (totalTargetWordsInSentence === 0) {
+            confirmBtn.disabled = false; 
+        } else {
+            confirmBtn.disabled = (movedWordsCount === 0 && selectedWordForClick === null && wordsInSentenceDisplay === totalTargetWordsInSentence);
+        }
+    }
+
+    function checkWords() {
+        let currentSentenceCorrectCount = 0;
+        let totalTargetWords = 0;
+        let hasAnyIncorrect = false;
+        
+        const currentSentenceData = storyData[currentSentenceIndex];
+        
+        // Reset feedback classes first for all words that are currently in the DOM from this sentence
+        const allDraggableWordsInSentenceDOM = Array.from(document.querySelectorAll('.word-draggable')).filter(wordElement => {
+            const wordIndexMatch = wordElement.id.match(/word-(\d+)-(\d+)/);
+            return wordIndexMatch && parseInt(wordIndexMatch[1]) === currentSentenceIndex;
+        });
+
+        allDraggableWordsInSentenceDOM.forEach(wordElement => {
+            wordElement.classList.remove('click-selected', 'is-dragging', 'correct-category', 'wrongly-placed', 'missed-category');
+        });
+
+        // Iterate through original wordParts to determine correctness and update 'hadIssue'
+        currentSentenceData.wordParts.forEach((part, index) => {
+            if (targetCategories.includes(part.category)) {
+                totalTargetWords++;
+                const wordId = `word-${currentSentenceIndex}-${index}`;
+                const wordElement = document.getElementById(wordId);
+
+                if (wordElement) { 
+                    const correctCategory = part.category; 
+                    const parentZone = wordElement.closest('.drop-zone');
+                    const placedCategory = parentZone ? parentZone.id.replace('zone-', '') : null;
+
+                    if (placedCategory === correctCategory) {
+                        wordElement.classList.add('correct-category');
+                        wordElement.removeAttribute('draggable'); 
+                        wordElement.removeEventListener('click', handleWordClick);
+                        currentSentenceCorrectCount++;
+                    } else { 
+                        hasAnyIncorrect = true;
+                        part.hadIssue = true; // Mark this original wordPart as having had an issue
+                        
+                        wordElement.classList.add('wrongly-placed'); 
+                        
+                        if (parentZone) { 
+                            parentZone.removeChild(wordElement);
+                        }
+                        
+                        // Re-insert into sentence-display at approximately original spot
+                        const originalPositionWrapper = document.createElement('span');
+                        originalPositionWrapper.classList.add('word-wrapper');
+                        originalPositionWrapper.appendChild(wordElement);
+                        
+                        const originalIndex = parseInt(wordElement.id.split('-')[2]);
+                        let inserted = false;
+                        const currentWordsInSentenceDisplay = Array.from(sentenceDisplay.children);
+                        for(let i = 0; i < currentWordsInSentenceDisplay.length; i++){
+                            const childWordSpan = currentWordsInSentenceDisplay[i].querySelector('.word-draggable');
+                            // Insert before the first word that has a higher original index
+                            if(childWordSpan && parseInt(childWordSpan.id.split('-')[2]) > originalIndex){
+                                sentenceDisplay.insertBefore(originalPositionWrapper, currentWordsInSentenceDisplay[i]);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                        if (!inserted) {
+                            sentenceDisplay.appendChild(originalPositionWrapper); 
+                        }
+
+                        wordElement.setAttribute('draggable', 'true');
+                        wordElement.addEventListener('click', handleWordClick);
+                    }
+                } 
+            }
+        });
+        
+        // Highlight any target words that were missed (still in sentence-display and not green)
+        currentSentenceData.wordParts.forEach((part, index) => {
+            if (targetCategories.includes(part.category)) {
+                const wordId = `word-${currentSentenceIndex}-${index}`;
+                const wordElement = document.getElementById(wordId);
+                if (wordElement && wordElement.closest('#sentence-display') && !wordElement.classList.contains('correct-category')) {
+                    wordElement.classList.add('missed-category');
+                    part.hadIssue = true; // Mark as having had an issue
+                    hasAnyIncorrect = true;
+                }
+            }
+        });
+
+
+        if (hasAnyIncorrect) {
+            feedbackDiv.innerHTML = translations[currentLanguage].feedbackMixed(currentSentenceCorrectCount, totalTargetWords);
+            confirmBtn.disabled = false; 
+            nextBtn.style.display = 'none';
+        } else { 
+            feedbackDiv.innerHTML = translations[currentLanguage].feedbackCorrect(currentSentenceCorrectCount, totalTargetWords);
+            confirmBtn.disabled = true; 
+            nextBtn.style.display = 'inline-block';
+        }
+        selectedWordForClick = null; 
+    }
+
+    function nextSentence() {
+        currentSentenceIndex++;
+        displaySentence();
+    }
+
+    function endGame() {
+        sentenceDisplay.style.display = 'none';
+        document.querySelectorAll('.drop-zones-container, .buttons-container').forEach(el => el.style.display = 'none');
+        feedbackDiv.style.display = 'none';
+        
+        renderResultsScreen();
+
+        helpButton.style.display = 'none';
+        languageToggleBtn.style.display = 'none';
+    }
+
+    function renderResultsScreen() {
+        resultsScreen.style.display = 'block';
+        resultsContent.innerHTML = ''; 
+
+        const titleEl = document.createElement('h2');
+        titleEl.textContent = translations[currentLanguage].resultsTitle;
+        resultsContent.appendChild(titleEl);
+
+        storyData.forEach((sentenceData, sentenceIdx) => {
+            const resultSentenceDiv = document.createElement('div');
+            resultSentenceDiv.classList.add('result-sentence');
+            const p = document.createElement('p');
+
+            sentenceData.wordParts.forEach(part => {
+                const wordSpan = document.createElement('span');
+                wordSpan.classList.add('result-word-wrapper');
+                const innerWordSpan = document.createElement('span');
+                innerWordSpan.textContent = part.text;
+                innerWordSpan.classList.add('result-word');
+                
+                if (targetCategories.includes(part.category)) {
+                    if (part.hadIssue) {
+                        innerWordSpan.classList.add('wrongly-placed'); // Yellow if it ever had an issue
+                    } else {
+                        innerWordSpan.classList.add('correct-category'); // Green if always correct
+                    }
+                } else if (part.category === "Puntuacion") {
+                    innerWordSpan.classList.add('punctuation');
+                } else {
+                    innerWordSpan.classList.add('other-word');
+                }
+                wordSpan.appendChild(innerWordSpan);
+                p.appendChild(wordSpan);
+            });
+            resultSentenceDiv.appendChild(p);
+            resultsContent.appendChild(resultSentenceDiv);
+        });
+    }
+
+    // --- Event Listeners Initialization ---
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('dragover', handleDragOver);
+    document.addEventListener('dragleave', handleDragLeave);
+    document.addEventListener('drop', handleDrop);
+
+    document.body.addEventListener('dragover', (event) => {
+        const target = event.target;
+        if (!target.closest('.drop-zone') && !target.closest('.drag-source-container') && !target.classList.contains('word-draggable')) {
+            event.preventDefault();
+        }
+    });
+
+    confirmBtn.addEventListener('click', checkWords);
+    nextBtn.addEventListener('click', nextSentence);
+    languageToggleBtn.addEventListener('click', () => {
+        const newLang = languageToggleBtn.dataset.lang;
+        setLanguage(newLang);
+    });
+
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.addEventListener('click', handleDropZoneClick);
+    });
+
+    // Tutorial Modal Event Listeners
+    helpButton.addEventListener('click', () => {
+        tutorialModal.style.display = 'flex'; 
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        tutorialModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target == tutorialModal) {
+            tutorialModal.style.display = 'none';
+        }
+    });
+
+    // Initial setup
+    setLanguage(currentLanguage);
+    displaySentence(); 
+</script>
+</body>
+</html>
